@@ -11,7 +11,7 @@ exports.createTask = async (req, res, next) => {
       taskDescription: req.body.taskDescription,
       taskStatus: req.body.taskStatus,
       dueDate: req.body.dueDate,
-      associatedCategory: req.body.associatedCategory,
+      Category: req.body.Category,
       user: req.user.id,
     });
     res.status(201).json({
@@ -30,7 +30,7 @@ exports.updateTask= async (req, res, next) => {
     const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     })
-      .populate("associatedCategory", "Category")
+      .populate("Category", "Category")
       .populate("user", "firstName lastName");
     res.status(200).json({
       success: true,
@@ -68,58 +68,40 @@ exports.deleteTask = async (req, res, next) => {
   }
 };
 
-
 exports.showAllTasks = async (req, res, next) => {
-  const keyword = req.query.keyword
-    ? {
-        $or: [
-          {
-            taskTitle: {
-              $regex: req.query.keyword,
-              $options: "i",
-            },
-          },
-        ],
-      }
-    : {};
+    try {
+        console.log("inside showALL");
+        const tasks = await Task.find().populate("Category", "category");
+        console.log(tasks) 
+        res.status(200).json({
+            success: true,
+            tasks
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
-  // filter by category
-  let ids = [];
-  const taskCategory = await Category.find({}, { _id: 1 });
-  taskCategory.forEach((cat) => {
-    ids.push(cat._id);
-  });
-  let cat = req.query.cat;
-  let categ = cat !== "" ? cat : ids;
 
-  //   //enable pagination
-  //   const pageSize = 5;
-  //   const page = Number(req.query.pageNumber) || 1;
-  //   //const count = await Job.find({}).estimatedDocumentCount();
-  //   const count = await Job.find({
-  //     ...keyword,
-  //     jobType: categ,
-  //     location: locationFilter,
-  //   }).countDocuments();
 
+exports.showTaskById = async (req, res, next) => {
   try {
-    const tasks = await Task.find({
-      ...keyword,
-      associatedCategory: categ,
-    })
-      .populate("associatedCategory", "Category")
-      .populate("user", "firstName")
-      .sort({ createdAt: -1 })
-      .skip(pageSize * (page - 1))
-      .limit(pageSize);
+    const { id } = req.params; // Get the task ID from the request parameters
+    const task = await Task.findById(id);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
     res.status(200).json({
       success: true,
-      tasks,
-      page,
-      pages: Math.ceil(count / pageSize),
-      count,
+      task,
     });
   } catch (error) {
     next(error);
   }
 };
+

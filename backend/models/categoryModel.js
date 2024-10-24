@@ -6,7 +6,7 @@ const CategorySchema = new mongoose.Schema(
     category: {
       type: String,
       trim: true,
-      required: [true, "Job Category is required"],
+      required: [true, "Task Category is required"],
       maxlength: 70,
     },
     user: {

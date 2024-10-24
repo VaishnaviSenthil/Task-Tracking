@@ -23,8 +23,9 @@ const taskSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
     },
-    associatedCategory: {
-      type: String,
+    Category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
     },
     user: {
       type: ObjectId,
